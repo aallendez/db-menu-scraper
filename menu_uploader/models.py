@@ -105,3 +105,9 @@ class FoodItemAllergen(models.Model):
     
     def __str__(self):
         return f"{self.food_id} - {self.allergen_id}"
+    
+# Upload Menu Insertion
+def upload_menu(menu_text):
+    menu = Menu(menu_text=menu_text)
+    menu.save()
+    return menu
