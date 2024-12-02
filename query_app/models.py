@@ -1,5 +1,5 @@
 from django.db import models
-from menu_uploader.models import Restaurant, Menu
+from menu_uploader.models import Restaurant, Menu, FoodItem
 
 # Create your models here.
 
@@ -18,6 +18,14 @@ def get_restaurant_by_cuisine(cuisine_name):
 
 def get_restaurant_by_location(location):
     return Restaurant.objects.filter(location__icontains=location)
+
+def get_restaurant_average_price(restaurant_id):
+    menus = Menu.objects.filter(restaurant_id=restaurant_id)
+    total_price = 0
+    for menu in menus:
+        for food_item in menu.food_items.all():
+            total_price += food_item.food_price
+    return total_price / menus.count()
 
 
 # Menu Queries
