@@ -56,8 +56,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'menu_uploader',
-    'query_app',
+    'main_app',
     'rest_framework'
 ]
 

@@ -2,6 +2,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from menu_uploader.models import Restaurant
 from query_app.views import get_restaurant_by_id
+from menu_uploader.views import upload_menu
 
 # Menu Uploader Requests
 
@@ -21,6 +22,15 @@ def insert_restaurant(request):
     
     return Response({"message": "Restaurant inserted successfully"}, status=200)
 
+@api_view(['POST'])
+def upload_menu(request):
+    try:
+        upload_menu(request)
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+    
+    return Response({"message": "Menu uploaded successfully"}, status=200)
+
 
 
 # Query App Requests
@@ -29,4 +39,5 @@ def insert_restaurant(request):
 def get_restaurant_by_id(request, restaurant_id):
     restaurant = get_restaurant_by_id(restaurant_id)
     return Response(restaurant, status=200)
+
 

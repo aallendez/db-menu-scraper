@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class QueryAppConfig(AppConfig):
+class MainAppConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'query_app'
+    name = 'main_app'

@@ -1,6 +1,5 @@
-from django.urls import path
-from .views import insert_restaurant
+from django.urls import path, include
 
 urlpatterns = [
-    path('insert-restaurant/', insert_restaurant, name='insert_restaurant')
+    path('api/', include('app.urls')),
 ]

@@ -5,6 +5,8 @@ from openai import OpenAI
 # Initialize OpenAI client with the loaded API key
 client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
+
+# AI PDF Processing
 def extract_text_from_pdf(pdf_path):
     """Extract text from a PDF file."""
     with pdfplumber.open(pdf_path) as pdf:
@@ -66,3 +68,10 @@ def format_menu_data(pdf_path):
         menu_items.append(fields)
     
     return menu_items
+
+
+# AI Query Processing
+
+def filter_query(criteria):
+    # Mock filter logic
+    return [{"name": "Italian Bistro", "location": "Main St"}]
