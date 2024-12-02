@@ -25,12 +25,6 @@ def upload_menu(request):
             'Restaurant_Name': restaurant_name
         }
         
-    
-        
-        
-        
-        
-        
         return JsonResponse({'message': 'Menu uploaded successfully'}, status=200)
     else:
         return JsonResponse({'message': 'Invalid request method'}, status=400)

@@ -30,7 +30,6 @@ def get_restaurant_average_price(restaurant_id):
             total_price += food_item.food_price
     return total_price / menus.count()
 
-
 # Menu Queries
 def get_all_menus():
     return Menu.objects.all()
