@@ -1,43 +1,36 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from menu_uploader.models import Restaurant
-from query_app.views import get_restaurant_by_id
-from menu_uploader.views import upload_menu
+from main_app.models import Restaurant
+from main_app.views import GetAllRestaurants, CreateRestaurant, HandleUserQuery, MenuUploadView
 
 # Menu Uploader Requests
 
 @api_view(['POST'])
 def insert_restaurant(request):
-    print(request.data)
-    
-    name = request.data['name']
-    cuisine = request.data['cuisine']
-    location = request.data['location']
-    
     try:
-        restaurant = Restaurant(restaurant_name=name, cuisine_name=cuisine, location=location)
-        restaurant.save()
+        return CreateRestaurant.as_view()(request)
     except Exception as e:
         return Response({"message": str(e)}, status=500)
-    
-    return Response({"message": "Restaurant inserted successfully"}, status=200)
 
 @api_view(['POST'])
 def upload_menu(request):
     try:
-        upload_menu(request)
+        return MenuUploadView.as_view()(request)
     except Exception as e:
         return Response({"message": str(e)}, status=500)
-    
-    return Response({"message": "Menu uploaded successfully"}, status=200)
 
-
-
-# Query App Requests
 
 @api_view(['GET'])
-def get_restaurant_by_id(request, restaurant_id):
-    restaurant = get_restaurant_by_id(restaurant_id)
-    return Response(restaurant, status=200)
+def get_all_restaurants(request):
+    try:
+        return GetAllRestaurants.as_view()(request)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
 
 
+@api_view(['POST'])
+def handle_user_query(request):
+    try:
+        return HandleUserQuery.as_view()(request)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)

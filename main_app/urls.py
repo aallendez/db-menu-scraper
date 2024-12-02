@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import RestaurantView, MenuUploadView, BrowserPromptView
+from .views import MenuUploadView, GetAllRestaurants, CreateRestaurant, HandleUserQuery
 
 urlpatterns = [
-    path('restaurants/', RestaurantView.as_view(), name='restaurants'),
-    path('menus/upload/', MenuUploadView.as_view(), name='menu-upload'),
-    path('browser-prompt/', BrowserPromptView.as_view(), name='browser-prompt'),
+    path('upload-menu/', MenuUploadView.as_view(), name='menu-upload'),
+    path('get-all-restaurants/', GetAllRestaurants.as_view(), name='get-all-restaurants'),
+    path('create-restaurant/', CreateRestaurant.as_view(), name='create-restaurant'),
+    path('handle-user-query/', HandleUserQuery.as_view(), name='handle-user-query'),
 ]

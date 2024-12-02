@@ -1,70 +1,63 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Restaurant, Menu
-from .serializers import RestaurantSerializer, MenuSerializer
-from .ai_operations import process_pdf, filter_query
+from .models import Restaurant, Menu, FoodItem
+from .serializers import RestaurantSerializer, MenuSerializer, FoodItemSerializer
+from .ai_ops import format_menu_data, filter_query, extract_text_from_pdf, save_menu_to_db
 
-class RestaurantView(APIView):
-    def get(self, request):
-        restaurants = Restaurant.objects.all()
-        serializer = RestaurantSerializer(restaurants, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = RestaurantSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+# Upload Menu
 class MenuUploadView(APIView):
     def post(self, request):
         file = request.FILES.get('file')
         restaurant_id = request.data.get('restaurant_id')
+
         try:
-            processed_data = process_pdf(file)
-            menu = Menu.objects.create(
-                restaurant_id=restaurant_id,
-                pdf_file=file,
-                processed_data=processed_data,
-            )
-            return Response({"id": menu.id}, status=status.HTTP_201_CREATED)
+            # Step 1: Extract menu text from PDF
+            menu_text = extract_text_from_pdf(file)
+
+            # Step 2: Save menu to the database
+            menu = save_menu_to_db(menu_text, restaurant_id)
+
+            return Response({"menu_id": menu.menu_version_id}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-class BrowserPromptView(APIView):
-    def get(self, request):
-        criteria = request.query_params.get("criteria")
-        results = filter_query(criteria)
-        return Response(results)
 
-# Create your views here.
-def upload_menu(request):
-    
-    if request.method == 'POST':
-        request_data = request.POST
-        
-        menu_text = request_data.get('menu_text')
-        restaurant_name = request_data.get('restaurant_name')
-        restaurant_id = request_data.get('restaurant_id')
-        
-        menu_list = format_menu_data(menu_text)
-        
-        # Insert processed menu into database
-        data = {
-            'Food': menu_list['Food'],
-            'Price': menu_list['Price'],
-            'Dish_Type': menu_list['Dish_Type'],
-            'Allergens': menu_list['Allergens'],
-            'Ingredients': menu_list['Ingredients']
-        }
-        
-        return JsonResponse({'message': 'Menu uploaded successfully'}, status=200)
-    else:
-        return JsonResponse({'message': 'Invalid request method'}, status=400)
-    
-    
+class GetAllRestaurants(APIView):
+    def get(self, request):
+        try:
+            restaurants = Restaurant.objects.all()
+            serializer = RestaurantSerializer(restaurants, many=True)
+            return Response({"restaurants": serializer.data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CreateRestaurant(APIView):
+    def post(self, request):
+        try:
+            serializer = RestaurantSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"restaurant": serializer.data}, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class HandleUserQuery(APIView):
+    def post(self, request):
+        try:
+            query = request.data.get('query')
+            results = filter_query(query)
+            return Response({"results": results}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
 # Restaurant Queries
 def get_all_restaurants():
     return Restaurant.objects.all()

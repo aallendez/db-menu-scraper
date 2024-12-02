@@ -1,6 +1,7 @@
 import os
 import pdfplumber
 from openai import OpenAI
+from .models import Menu, FoodItem, DishType, Ingredient, Allergen, FoodItemIngredient, FoodItemAllergen, DishTypeFoodItem, MenuFoodItem
 
 # Initialize OpenAI client with the loaded API key
 client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
@@ -15,6 +16,7 @@ def extract_text_from_pdf(pdf_path):
             text += page.extract_text()
     print(text)
     return text
+
 
 def format_menu_data(pdf_path):
     """Format menu text into structured data using OpenAI API."""
@@ -68,6 +70,60 @@ def format_menu_data(pdf_path):
         menu_items.append(fields)
     
     return menu_items
+
+def save_menu_to_db(menu_text, restaurant_id):
+    """
+    Save a menu and its items to the database.
+    """
+    # Step 1: Create a new Menu instance
+    menu = Menu(menu_text=menu_text)
+    menu.save()
+
+    # Step 2: Parse the structured menu data
+    structured_data = format_menu_data(menu_text)
+    
+    # Step 3: Save related data to the database
+    for item in structured_data:
+        # Extract fields
+        food_name = item['Food']
+        price = item['Price']
+        dish_type_name = item['Dish_Type']
+        allergens = item.get('Allergens', [])
+        ingredients = item.get('Ingredients', [])
+        
+        # Create or get FoodItem
+        food_item, created = FoodItem.objects.get_or_create(
+            food_name=food_name,
+            defaults={
+                'food_description': "",
+                'food_price': float(price)
+            }
+        )
+
+        # Create or get DishType
+        dish_type, _ = DishType.objects.get_or_create(dish_type=dish_type_name)
+
+        # Link DishType and FoodItem
+        DishTypeFoodItem.objects.get_or_create(
+            food_id=food_item,
+            dish_type_id=dish_type
+        )
+
+        # Create or get Ingredients and link them to the FoodItem
+        for ingredient_name in ingredients:
+            ingredient, _ = Ingredient.objects.get_or_create(ingredient_name=ingredient_name)
+            FoodItemIngredient.objects.get_or_create(food_id=food_item, ingredient_id=ingredient)
+
+        # Create or get Allergens and link them to the FoodItem
+        for allergen_name in allergens:
+            allergen, _ = Allergen.objects.get_or_create(allergen_name=allergen_name)
+            FoodItemAllergen.objects.get_or_create(food_id=food_item, allergen_id=allergen)
+
+        # Link FoodItem to the Menu
+        MenuFoodItem.objects.create(menu_version_id=menu, food_id=food_item)
+
+    return menu
+
 
 
 # AI Query Processing

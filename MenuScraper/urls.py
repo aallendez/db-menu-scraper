@@ -38,8 +38,7 @@ router.register(r'users', UserViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('admin/', admin.site.urls),
-    path('upload-menu/', include('menu_uploader.urls')),
-    path('thats-the-stuff/', include('query_app.urls')),
+    path('scraper/', include('main_app.urls')),
     path('api/', include('rest_api.urls')),
     path('api-auth/', include('rest_framework.urls'))
 ]
