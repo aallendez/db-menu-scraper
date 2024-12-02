@@ -1,7 +1,9 @@
 import os
 import pdfplumber
+import json
 from openai import OpenAI
-from .models import Menu, FoodItem, DishType, Ingredient, Allergen, FoodItemIngredient, FoodItemAllergen, DishTypeFoodItem, MenuFoodItem
+from .models import Menu, FoodItem, DishType, Ingredient, Allergen, FoodItemIngredient, FoodItemAllergen, DishTypeFoodItem, MenuFoodItem, RestaurantMenu
+import re
 
 # Initialize OpenAI client with the loaded API key
 client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
@@ -14,14 +16,13 @@ def extract_text_from_pdf(pdf_path):
         text = ""
         for page in pdf.pages:
             text += page.extract_text()
-    print(text)
     return text
 
 
-def format_menu_data(pdf_path):
+def format_menu_data(menu_text):
     """Format menu text into structured data using OpenAI API."""
-    menu_text = extract_text_from_pdf(pdf_path)
     
+    print("Formatting menu data...")
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -46,81 +47,112 @@ def format_menu_data(pdf_path):
                                 [
                                     {{
                                         'Food': 'food name',
-                                        'Price': 'price',
+                                        'Price': 'price'(only numbers),
                                         'Dish_Type': 'dish type',
                                         'Allergens': ['allergen1', 'allergen2', 'allergen3'],
                                         'Ingredients': ['ingredient1', 'ingredient2', 'ingredient3']
                                     }},
                                     ...
                                 ]
+                                
+                            DO NOT MAKE THE RETURN WITH ```json. Just return the list of dicts and remember to add commas between the dicts. Just return it like in the example above. If a value is empty, set it to an empty string or "0" if it's a number.
                             """
             }
         ]
     )
-    
-    
 
-    # Parse the response into a list of menu items
-    structured_data = response.choices[0].message.content
-    menu_items = []
-    
-    for line in structured_data.strip().splitlines():
-        # Convert each line into a list of fields
-        fields = [field.strip() for field in line.split(",")]
-        menu_items.append(fields)
-    
-    return menu_items
+    try:
+        print("Parsing AI response as JSON...")
+        content = response.choices[0].message.content
+        content = re.sub(r"(?<!\w)'(?!\w)", '"', content)  # Replace single quotes with double quotes for keys
+        content = content.replace("'", '"')  # Replace all single quotes with double quotes
+        
+        print("Content: ", content)
+        structured_data = json.loads(content)
+        
+        if not isinstance(structured_data, list):
+            raise ValueError("AI response is not a list of dictionaries.")
+        return structured_data
+    except (json.JSONDecodeError, KeyError, ValueError) as e:
+        raise ValueError(f"Failed to parse AI response: {str(e)}")
 
-def save_menu_to_db(menu_text, restaurant_id):
+
+
+def save_menu_to_db(pdf_path, restaurant_id):
     """
     Save a menu and its items to the database.
     """
     # Step 1: Create a new Menu instance
+    print("Creating menu...")
+    menu_text = extract_text_from_pdf(pdf_path)
     menu = Menu(menu_text=menu_text)
     menu.save()
 
-    # Step 2: Parse the structured menu data
-    structured_data = format_menu_data(menu_text)
+    # Step 2: Link the menu to the restaurant
+    print("Linking menu to restaurant...")
+    RestaurantMenu.objects.create(restaurant_id_id=restaurant_id, menu_version_id=menu)
+
+    # Step 3: Parse the structured menu data
+    print("Parsing structured menu data...")
+    try:
+        structured_data = format_menu_data(menu_text)
+    except ValueError as e:
+        raise ValueError(f"Error processing menu data: {str(e)}")
     
-    # Step 3: Save related data to the database
+    # Step 4: Save related data to the database
+    print("Saving related data to the database...")
     for item in structured_data:
-        # Extract fields
-        food_name = item['Food']
-        price = item['Price']
-        dish_type_name = item['Dish_Type']
-        allergens = item.get('Allergens', [])
-        ingredients = item.get('Ingredients', [])
-        
-        # Create or get FoodItem
-        food_item, created = FoodItem.objects.get_or_create(
-            food_name=food_name,
-            defaults={
-                'food_description': "",
-                'food_price': float(price)
-            }
-        )
+        try:
+            print("Extracting fields...")
+            # Extract fields
+            food_name = item['Food']
+            price = item['Price']
+            dish_type_name = item['Dish_Type']
+            allergens = item.get('Allergens', [])
+            ingredients = item.get('Ingredients', [])
 
-        # Create or get DishType
-        dish_type, _ = DishType.objects.get_or_create(dish_type=dish_type_name)
+            print("Handling empty price...")
+            # Handle empty price
+            if price == '':
+                price = 0.0  # Set a default value or handle as needed
+            else:
+                price = float(price)  # Convert to float if not empty
+                
+            print("Creating or getting FoodItem...")
+            
+            # Create or get FoodItem
+            food_item, created = FoodItem.objects.get_or_create(
+                food_name=food_name,
+                defaults={
+                    'food_description': "",
+                    'food_price': price
+                }
+            )
 
-        # Link DishType and FoodItem
-        DishTypeFoodItem.objects.get_or_create(
-            food_id=food_item,
-            dish_type_id=dish_type
-        )
+            # Create or get DishType
+            dish_type, _ = DishType.objects.get_or_create(dish_type=dish_type_name)
 
-        # Create or get Ingredients and link them to the FoodItem
-        for ingredient_name in ingredients:
-            ingredient, _ = Ingredient.objects.get_or_create(ingredient_name=ingredient_name)
-            FoodItemIngredient.objects.get_or_create(food_id=food_item, ingredient_id=ingredient)
+            # Link DishType and FoodItem
+            DishTypeFoodItem.objects.get_or_create(
+                food_id=food_item,
+                dish_type_id=dish_type
+            )
 
-        # Create or get Allergens and link them to the FoodItem
-        for allergen_name in allergens:
-            allergen, _ = Allergen.objects.get_or_create(allergen_name=allergen_name)
-            FoodItemAllergen.objects.get_or_create(food_id=food_item, allergen_id=allergen)
+            # Create or get Ingredients and link them to the FoodItem
+            for ingredient_name in ingredients:
+                ingredient, _ = Ingredient.objects.get_or_create(ingredient_name=ingredient_name)
+                FoodItemIngredient.objects.get_or_create(food_id=food_item, ingredient_id=ingredient)
 
-        # Link FoodItem to the Menu
-        MenuFoodItem.objects.create(menu_version_id=menu, food_id=food_item)
+            # Create or get Allergens and link them to the FoodItem
+            for allergen_name in allergens:
+                allergen, _ = Allergen.objects.get_or_create(allergen_name=allergen_name)
+                FoodItemAllergen.objects.get_or_create(food_id=food_item, allergen_id=allergen)
+
+            # Link FoodItem to the Menu
+            MenuFoodItem.objects.create(menu_version_id=menu, food_id=food_item)
+
+        except KeyError as e:
+            raise ValueError(f"Missing field in structured data: {str(e)}")
 
     return menu
 
@@ -128,6 +160,7 @@ def save_menu_to_db(menu_text, restaurant_id):
 
 # AI Query Processing
 
-def filter_query(criteria):
+def filter_query(query):
     # Mock filter logic
+    
     return [{"name": "Italian Bistro", "location": "Main St"}]

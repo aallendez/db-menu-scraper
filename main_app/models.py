@@ -1,20 +1,23 @@
 from django.db import models
+from django.core.validators import MinValueValidator
+from django.core.validators import URLValidator
 
 class ProcessLog(models.Model):
     process_log_id = models.AutoField(primary_key=True)
     process_date = models.DateTimeField(auto_now_add=True)
     process_output = models.CharField(max_length=255)
     process_message = models.TextField()
+    process_name = models.CharField(max_length=255)
     
     def __str__(self):
         return f"{self.process_name} - {self.process_date}"
 
 class Restaurant(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=100)
     location = models.CharField(max_length=255)
     schedule = models.CharField(max_length=255)
-    url = models.CharField(max_length=255)
+    url = models.URLField(max_length=500)
     
     def __str__(self):
         return self.name
@@ -30,6 +33,9 @@ class Menu(models.Model):
 class RestaurantMenu(models.Model):
     restaurant_id = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
     menu_version_id = models.ForeignKey(Menu, on_delete=models.CASCADE)
+    
+    class Meta:
+        unique_together = ('restaurant_id', 'menu_version_id')
     
     def __str__(self):
         return f"{self.restaurant_id} - {self.menu_version_id}"
@@ -57,9 +63,13 @@ class DishType(models.Model):
     
 class FoodItem(models.Model):
     food_id = models.AutoField(primary_key=True)
-    food_name = models.CharField(max_length=255)
+    food_name = models.CharField(max_length=255, unique=True)
     food_description = models.TextField()
-    food_price = models.FloatField()
+    food_price = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        validators=[MinValueValidator(0)]
+    )
     
     def __str__(self):
         return self.food_name
@@ -80,7 +90,7 @@ class DishTypeFoodItem(models.Model):
     
 class Ingredient(models.Model):
     ingredient_id = models.AutoField(primary_key=True)
-    ingredient_name = models.CharField(max_length=255)
+    ingredient_name = models.CharField(max_length=255, unique=True)
     
     def __str__(self):
         return self.ingredient_name
@@ -94,7 +104,7 @@ class FoodItemIngredient(models.Model):
     
 class Allergen(models.Model):
     allergen_id = models.AutoField(primary_key=True)
-    allergen_name = models.CharField(max_length=255)
+    allergen_name = models.CharField(max_length=255, unique=True)
     
     def __str__(self):
         return self.allergen_name
@@ -106,8 +116,3 @@ class FoodItemAllergen(models.Model):
     def __str__(self):
         return f"{self.food_id} - {self.allergen_id}"
     
-# Upload Menu Insertion
-def upload_menu(menu_text):
-    menu = Menu(menu_text=menu_text)
-    menu.save()
-    return menu
