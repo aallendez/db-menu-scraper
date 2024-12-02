@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from pdf_processing import format_menu_to_csv
+from .pdf_processing import format_menu_data
 from menu_uploader.models import Restaurant, Menu, RestaurantMenu, upload_menu
 
 
@@ -14,7 +14,7 @@ def upload_menu(request):
         restaurant_name = request_data.get('restaurant_name')
         restaurant_id = request_data.get('restaurant_id')
         
-        menu_list = format_menu_to_csv(menu_text)
+        menu_list = format_menu_data(menu_text)
         
         # Insert processed menu into database
         data = {

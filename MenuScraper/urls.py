@@ -36,6 +36,7 @@ router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
 
 urlpatterns = [
+    path('', include(router.urls)),
     path('admin/', admin.site.urls),
     path('upload-menu/', include('menu_uploader.urls')),
     path('thats-the-stuff/', include('query_app.urls')),
