@@ -23,7 +23,7 @@ def upload_menu(request):
 @api_view(['GET'])
 def get_all_restaurants(request):
     try:
-        return GetAllRestaurants.as_view()(request)
+        return Response({"message": "Hello World!"})
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 

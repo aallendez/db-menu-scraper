@@ -4,9 +4,12 @@ from rest_framework import status
 from .models import Restaurant, Menu, FoodItem
 from .serializers import RestaurantSerializer, MenuSerializer, FoodItemSerializer
 from .ai_ops import format_menu_data, filter_query, extract_text_from_pdf, save_menu_to_db
+from rest_framework.permissions import AllowAny
 
 # Upload Menu
 class MenuUploadView(APIView):
+    permission_classes = [AllowAny]
+    
     def post(self, request):
         file = request.FILES.get('file')
         restaurant_id = request.data.get('restaurant_id')
@@ -24,9 +27,12 @@ class MenuUploadView(APIView):
 
 
 class GetAllRestaurants(APIView):
+    def get_queryset(self):
+        return Restaurant.objects.all()
+
     def get(self, request):
         try:
-            restaurants = Restaurant.objects.all()
+            restaurants = self.get_queryset()
             serializer = RestaurantSerializer(restaurants, many=True)
             return Response({"restaurants": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -34,11 +40,13 @@ class GetAllRestaurants(APIView):
 
 
 class CreateRestaurant(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
         try:
             serializer = RestaurantSerializer(data=request.data)
             if serializer.is_valid():
-                serializer.save()
+                restaurant = serializer.save()
                 return Response({"restaurant": serializer.data}, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
