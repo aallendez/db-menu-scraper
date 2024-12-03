@@ -23,40 +23,69 @@ def format_menu_data(menu_text):
     """Format menu text into structured data using OpenAI API."""
     
     print("Formatting menu data...")
+    # response = client.chat.completions.create(
+    #     model="gpt-3.5-turbo",
+    #     messages=[
+    #         {
+    #             "role": "system",
+    #             "content": """
+    #                     You are an assistant made to format menu text into structured data. You will be given a string of text that contains a restaurant menu.
+    #                     Your job is to format the text into a list of lists, where each inner list contains the fields of a menu item.
+    #             """
+    #         },
+    #         {
+    #             "role": "user",
+    #             "content":  f"""
+    #                             Format the following menu into structured data:\n\n{menu_text}.
+    #                             Return the response as a list of dicts, where each element is a dict of the fields of a menu item.
+    #                             1. Return the food name as the first element of the dict.
+    #                             2. Return the price as the second element of the dict.
+    #                             3. Return the dish type as the third element of the dict. Choose from: Appetizers, Mains, Desserts, Sides, Drinks
+    #                             4. Return the allergens as the fourth element of the dict, set them as a list of allergens. Choose from: Dairy, Gluten, Vegan, Vegetarian, Eggs, Shellfish, Tree Nuts, Peanuts, Fish, Soy
+    #                             5. Return the ingredients as the fifth element of the dict, set them as a list of ingredients.
+    #                             A a list in the full response would look like this: 
+    #                             [
+    #                                 {{
+    #                                     'Food': 'food name',
+    #                                     'Price': 'price'(only numbers),
+    #                                     'Dish_Type': 'dish type',
+    #                                     'Allergens': ['allergen1', 'allergen2', 'allergen3'],
+    #                                     'Ingredients': ['ingredient1', 'ingredient2', 'ingredient3']
+    #                                 }},
+    #                                 ...
+    #                             ]
+                                
+    #                         DO NOT MAKE THE RETURN WITH ```json. Just return the list of dicts and remember to add commas between the dicts. Just return it like in the example above. If a value is empty, set it to an empty string or "0" if it's a number.
+    #                         """
+    #         }
+    #     ]
+    # )
+    
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {
                 "role": "system",
-                "content": """
-                        You are an assistant made to format menu text into structured data. You will be given a string of text that contains a restaurant menu.
-                        Your job is to format the text into a list of lists, where each inner list contains the fields of a menu item.
-                """
+                "content": "You are an expert in formatting restaurant menu text into structured data."
             },
             {
                 "role": "user",
-                "content":  f"""
-                                Format the following menu into structured data:\n\n{menu_text}.
-                                Return the response as a list of dicts, where each element is a dict of the fields of a menu item.
-                                1. Return the food name as the first element of the dict.
-                                2. Return the price as the second element of the dict.
-                                3. Return the dish type as the third element of the dict. Choose from: Appetizers, Mains, Desserts, Sides, Drinks
-                                4. Return the allergens as the fourth element of the dict, set them as a list of allergens. Choose from: Dairy, Gluten, Vegan, Vegetarian, Eggs, Shellfish, Tree Nuts, Peanuts, Fish, Soy
-                                5. Return the ingredients as the fifth element of the dict, set them as a list of ingredients.
-                                A a list in the full response would look like this: 
-                                [
-                                    {{
-                                        'Food': 'food name',
-                                        'Price': 'price'(only numbers),
-                                        'Dish_Type': 'dish type',
-                                        'Allergens': ['allergen1', 'allergen2', 'allergen3'],
-                                        'Ingredients': ['ingredient1', 'ingredient2', 'ingredient3']
-                                    }},
-                                    ...
-                                ]
-                                
-                            DO NOT MAKE THE RETURN WITH ```json. Just return the list of dicts and remember to add commas between the dicts. Just return it like in the example above. If a value is empty, set it to an empty string or "0" if it's a number.
-                            """
+                "content": f"Convert the following menu into a structured dictionary with the following structure: "
+                           f"[{{'Food': 'dish name', "
+                           f"'Price': 'float in euros', "
+                           f"'Dish_Type': 'Appetizers, Mains, Desserts, Sides, Drinks', "
+                           f"'Ingredients': ['ingredient1', 'ingredient2', ...], "
+                           f"'Allergens': ['allergen1', 'allergen2', ...]}}].\n\n"
+                           f"Menu:\n{menu_text}\n\n"
+                           f"Instructions:\n"
+                           f"- Allergens must be strictly chosen from the following list: Dairy, Gluten, Vegan, Vegetarian, Eggs, Shellfish, Tree Nuts, Peanuts, Fish, Soy.\n"
+                           f"- If the menu specifies allergens, use them as provided.\n"
+                           f"- If allergens are not mentioned, infer them based on the dish description where possible"
+                           f"(e.g., cheese implies Dairy, pasta implies Gluten, seafood implies Fish, vegetarian dishes contain no meat or fish).\n"
+                           f"- Ingredients should be inferred based on the dish description (e.g., 'Caesar Salad' implies lettuce, croutons, parmesan, Caesar dressing). Make the ingredients lower case\n"
+                           f"- If no ingredients can be inferred or identified, use an empty array [] for ingredients.\n"
+                           f"- Provide only the dictionary structure as output. Do not include explanations or extra text."
+                           f"- Your answer will be parsed as JSON, so make sure it's valid JSON."
             }
         ]
     )
@@ -163,4 +192,30 @@ def save_menu_to_db(pdf_path, restaurant_id):
 def filter_query(query):
     # Mock filter logic
     
-    return [{"name": "Italian Bistro", "location": "Main St"}]
+    # Get ai educated guess 
+    suggested_query = ai_suggested_query(query)
+    
+    
+    
+    
+    ...
+    
+def ai_suggested_query(query):
+    # Get ai educated guess 
+    response = client.chat.completions.create(  
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are an expert in restaurant menus and customer queries. Your task is to suggest a more specific query based on a general query."
+            },
+            {
+                "role": "user",
+                "content": f"Suggest a more specific query based on the following general query: {query}"
+            }
+        ]
+    )
+    # Parse the response
+    output = json.loads(response.choices[0].message.content)
+    return output
+    
