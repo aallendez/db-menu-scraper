@@ -2,7 +2,7 @@ import os
 import pdfplumber
 import json
 from openai import OpenAI
-from .models import Menu, FoodItem, DishType, Ingredient, Allergen, FoodItemIngredient, FoodItemAllergen, DishTypeFoodItem, MenuFoodItem, RestaurantMenu
+from .models import Menu, FoodItem, DishType, Ingredient, Allergen, FoodItemIngredient, FoodItemAllergen, DishTypeFoodItem, MenuFoodItem, RestaurantMenu, ProcessLog
 import re
 
 # Initialize OpenAI client with the loaded API key
@@ -21,6 +21,7 @@ def extract_text_from_pdf(pdf_path):
 
 def format_menu_data(menu_text):
     """Format menu text into structured data using OpenAI API."""
+    
     
     print("Formatting menu data...")
     # response = client.chat.completions.create(
@@ -89,6 +90,7 @@ def format_menu_data(menu_text):
             }
         ]
     )
+    
 
     try:
         print("Parsing AI response as JSON...")
