@@ -23,7 +23,7 @@ class MenuUploadView(APIView):
             
             ProcessLog.objects.create(
                 process_name="format_and_save_menu_data",
-                process_data=datetime.datetime.now(),
+                process_date=datetime.datetime.now(),
                 process_message=f"Menu data correctly processed by AI and saved to DB for restaurant of ID {restaurant_id}",
                 process_output=menu.menu_version_id
             )
@@ -31,7 +31,7 @@ class MenuUploadView(APIView):
         except Exception as e:
             ProcessLog.objects.create(
                 process_name="format_and_save_menu_data",
-                process_data=datetime.datetime.now(),
+                process_date=datetime.datetime.now(),
                 process_message=f"Error processing menu data for restaurant of ID {restaurant_id}: {str(e)}",
                 process_output=str(e)
             )
@@ -94,7 +94,7 @@ class CreateRestaurant(APIView):
                 
                 ProcessLog.objects.create(
                     process_name="create_restaurant",
-                    process_data=datetime.datetime.now(),
+                    process_date=datetime.datetime.now(),
                     process_message=f"Restaurant correctly created in DB",
                     process_output=serializer.data
                 )
@@ -102,7 +102,7 @@ class CreateRestaurant(APIView):
             
             ProcessLog.objects.create(
                 process_name="create_restaurant",
-                process_data=datetime.datetime.now(),
+                process_date=datetime.datetime.now(),
                 process_message=f"Error creating restaurant: {serializer.errors}",
                 process_output=serializer.errors
             )
@@ -111,7 +111,7 @@ class CreateRestaurant(APIView):
         except Exception as e:
             ProcessLog.objects.create(
                 process_name="create_restaurant",
-                process_data=datetime.datetime.now(),
+                process_date=datetime.datetime.now(),
                 process_message=f"Error creating restaurant: {str(e)}",
                 process_output=str(e)
             )
@@ -134,7 +134,7 @@ class GetAllMenuVersionsFromRestaurant(APIView):
             
             ProcessLog.objects.create(
                 process_name="get_all_menu_versions_from_restaurant",
-                process_data=datetime.datetime.now(),
+                process_date=datetime.datetime.now(),
                 process_message=f"All menu versions correctly retrieved from DB for restaurant of ID {restaurant_id}",
                 process_output=serializer.data
             )
@@ -143,7 +143,7 @@ class GetAllMenuVersionsFromRestaurant(APIView):
         except Exception as e:
             ProcessLog.objects.create(
                 process_name="get_all_menu_versions_from_restaurant",
-                process_data=datetime.datetime.now(),
+                process_date=datetime.datetime.now(),
                 process_message=f"Error retrieving all menu versions from DB for restaurant of ID {restaurant_id}: {str(e)}",
                 process_output=str(e)
             )
@@ -164,7 +164,7 @@ class GetMenuVersion(APIView):
             
             ProcessLog.objects.create(
                 process_name="get_menu_version",
-                process_data=datetime.datetime.now(),
+                process_date=datetime.datetime.now(),
                 process_message=f"Menu version correctly retrieved from DB for ID {menu_version_id}",
                 process_output=serializer.data
             )
@@ -173,7 +173,7 @@ class GetMenuVersion(APIView):
         except Exception as e:
             ProcessLog.objects.create(
                 process_name="get_menu_version",
-                process_data=datetime.datetime.now(),
+                process_date=datetime.datetime.now(),
                 process_message=f"Error retrieving menu version from DB for ID {menu_version_id}: {str(e)}",
                 process_output=str(e)
             )
