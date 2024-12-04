@@ -74,7 +74,8 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
                     "url": "https://pizzaplace.com"
                 }
             ]
-        }```
+        }
+        ```
 
 3. **Create restaurant**
     - **Endpoint**: `/create_restaurant/`
@@ -121,17 +122,25 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
     - **Input**: 
         ```
         {
-            "menu_version_id": 101
+            "menu_version_id": 19
         }
         ```
     - **Output**: 
         ````
         {
             "menu_version": {
-                "menu_version_id": 9,
-                "creation_date": "2024-12-04T18:13:44.098280Z",
-                "menu_text": "....."
-            }
+                "menu_version_id": 19,
+                "creation_date": "2024-12-04T21:06:00.205035Z",
+                "menu_text": "NUESTROS CLÁSICOS\nGuacamole clásico con pico de gallo y totopos. 11€\nColiflor a las brasas marinada con aceite de oliva, limón y flor de sal. 12€\nTostada de atún de la Almadraba, ponzu, mayo-chipotle, aguacate\ny puerro frito. 25€\nChicharrón de Angus con guacamole y salsa chiltepín-limón. 20€\nGaonera de solomillo de vaca Rubia gallega madurada sobre\ncostra de queso mozzarella, rúcula sobre tortilla de maíz amarillo. 20€\nGobernador con camarón rojo, costra de queso oaxaqueño,\npico de gallo y alioli de chipotle ahumado. 23€\nCostilla de Black Angus flambeada con Tequila Don Julio 70. 24€\nLubina salvaje a la Talla de 1kg, con guacamole, kimchi y frijoles.\n(Recomendado para 2/3pax) 70€\nPARA COMPARTIR O NO, A LA BRASA\nPuerro y cebolleta a la brasa con demiglace de chile habanero. 9€\nChoriqueso parrillero de ropa vieja. 16€\nHuevos rotos con huitlacoche, con lascas de jamón ibérico puro\nde bellota, crema de guacamole y frijoles charros. 22€\nArroz a la Tumbada de mariscos con frijoles . 24€\nCRUDOS Y FRESCOS\nOstra Guillardeau Nº2 con aguachile verde y salsa de habanero\nquemada. 5,5€ ud\nCeviche de lubina salvaje, tomate de árbol, maracuyá, coco\ny espuma de elote. 25€\nEnsaladilla rusa, tartar de atún, mahonesa de chile meco, piparras\nahumadas. 25€\nDE LA HUERTA\nEnsalada lechuga, aguacate y piñones con vinagreta. 14€\nEnsalada de Jitomates, melón, pepino y vainilla. 14€\nCogollos de Tudela a la brasa a modo de ensalada Cesar. 14€NUESTROS TACOS DE AUTOR. 2 unidades\nPescadilla a la Veracruzana (Quesadilla de Bonito), aguachile\nrojo y zanahoria escabechada. 18€\nTaco Baja de langostinos, lombarda, tzatziki enchipotlado. 20€\nCochinillo de Sepúlveda, ribeteado con pibil, guacamole y Xnipek. 20€\nJaiba con txangurro, piña asada y ensalada de hierbas. 23€\nDEL MAR A LA BRASA\nPulpo a la brasa con papas al ajillo y Xnipek. 28€\nVentresca de bonito zarandeada, mole de novia y spaguetti\nde calabacín. 32€\nLangostinos a la brasa con piperrada de chiles toreados. 35€\nNUESTRA SELECCIÓN DE CARNE\nSolomillo de vaca madurada, 250g, Ayshire Sashi, Finlandia. 30€\nEntraña, 300g. Black Angus con chimichurri MX. 32€\nRibeye Steak, Lomo alto sin hueso 500g Ayshire Sashi, Finlandia. 58€\nTomahawk Steak 1kg, Ayshire Sashi, Finlandia.\n(Recomendado para 2/3 pax) 95€\nGUARNICIONES\nPatatas gratinadas con queso oaxaqueño. 9€\nCamote asado con miel chile guajillo y con setas tatemadas. 9€\nPimientos rojos al carbón con pimientos del Padrón toreados. 12€\n********\nPOSTRES\nJericalla, Natilla de coco, jazmín y sorbete de maracuyá. 9€\nTarta inversa de queso, crema de maíz y helado de vainilla\nde Veracruz. 10€\nPiña asada con hierba luisa, tequila blanco Don Julio y helado de\nleche merengada. 10€\nTarta de chocolate de metate con chantilly. 12€\n10% iva incluido"
+            },
+            "food_items": [
+                {
+                    "food_id": 161,
+                    "food_name": "Guacamole clásico con pico de gallo y totopos",
+                    "food_description": "",
+                    "food_price": "11.00"
+                }, ...
+            ]
         }
         ````
 
@@ -146,6 +155,7 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
         }
         ```
     - **Output**: 
+        ```
         {
             "results": [
                 {
@@ -167,6 +177,7 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
                 },...
             ]
         }
+        ```
 
 7. **Get summarized avg prices**
     - **Endpoint**: `/get-summarized-avg-prices/`
@@ -178,4 +189,13 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
             "restaurant_id": 9
         }
         ```
-    - **Output**: See below.
+    - **Output**: 
+        ````
+        {
+            "restaurant_id": 9,
+            "restaurant_name": "Bromfields",
+            "avg_food_price": "12.3300",
+            "max_food_price": "24.95",
+            "min_food_price": "4.95"
+        }
+        ````

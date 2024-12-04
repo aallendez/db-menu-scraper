@@ -145,15 +145,24 @@ class GetMenuVersion(APIView):
         try:
             menu_version_id = request.data.get('menu_version_id')
             menu_version = Menu.objects.get(menu_version_id=menu_version_id)
-            serializer = MenuSerializer(menu_version)
+            
+            # Get all food items associated with this menu
+            food_items = FoodItem.objects.filter(
+                menufooditem__menu_version_id=menu_version
+            )
+            food_serializer = FoodItemSerializer(food_items, many=True)
+            menu_serializer = MenuSerializer(menu_version)
             
             ProcessLog.objects.create(
                 process_name="get_menu_version",
                 process_date=datetime.datetime.now(),
                 process_message=f"Menu version correctly retrieved from DB for ID {menu_version_id}",
-                process_output=serializer.data
+                process_output=menu_serializer.data
             )
-            return Response({"menu_version": serializer.data}, status=status.HTTP_200_OK)
+            return Response({
+                "menu_version": menu_serializer.data,
+                "food_items": food_serializer.data
+            }, status=status.HTTP_200_OK)
 
         except Exception as e:
             ProcessLog.objects.create(
