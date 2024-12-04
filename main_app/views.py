@@ -92,30 +92,15 @@ class CreateRestaurant(APIView):
                         cuisine_id=Cuisine.objects.get(cuisine_id=cuisine_id)
                     )
                 
-                ProcessLog.objects.create(
-                    process_name="create_restaurant",
-                    process_date=datetime.datetime.now(),
-                    process_message=f"Restaurant correctly created in DB",
-                    process_output=serializer.data
-                )
+                
                 return Response({"restaurant": serializer.data}, status=status.HTTP_201_CREATED)
             
-            ProcessLog.objects.create(
-                process_name="create_restaurant",
-                process_date=datetime.datetime.now(),
-                process_message=f"Error creating restaurant: {serializer.errors}",
-                process_output=serializer.errors
-            )
+            
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         except Exception as e:
-            ProcessLog.objects.create(
-                process_name="create_restaurant",
-                process_date=datetime.datetime.now(),
-                process_message=f"Error creating restaurant: {str(e)}",
-                process_output=str(e)
-            )
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            error_message = str(e) if e else "Unknown error"
+            return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
         
 # Get all menu versions from restaurant
 class GetAllMenuVersionsFromRestaurant(APIView):

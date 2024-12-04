@@ -38,8 +38,8 @@ def format_menu_data(menu_text):
                            f"[{{'Food': 'dish name', "
                            f"'Price': 'float in euros', "
                            f"'Dish_Type': 'Appetizers, Mains, Desserts, Sides, Drinks', "
-                           f"'Ingredients': ['ingredient1', 'ingredient2', ...], "
-                           f"'Allergens': ['allergen1', 'allergen2', ...]}}].\n\n"
+                           f"'Ingredients': ['ingredient1', 'ingredient2', ...], (If no ingredients are mentioned, use an empty array [])\n"
+                           f"'Allergens': ['allergen1', 'allergen2', ...]}}]. (If no allergens are mentioned, use an empty array [])\n\n"
                            f"Menu:\n{menu_text}\n\n"
                            f"Instructions:\n"
                            f"- Allergens must be strictly chosen from the following list: Dairy, Gluten, Vegan, Vegetarian, Eggs, Shellfish, Tree Nuts, Peanuts, Fish, Soy.\n"
@@ -49,7 +49,7 @@ def format_menu_data(menu_text):
                            f"- Ingredients should be inferred based on the dish description (e.g., 'Caesar Salad' implies lettuce, croutons, parmesan, Caesar dressing). Make the ingredients lower case\n"
                            f"- If no ingredients can be inferred or identified, use an empty array [] for ingredients.\n"
                            f"- Provide only the dictionary structure as output. Do not include explanations or extra text."
-                           f"- Your answer will be parsed as JSON, so make sure it's valid JSON."
+                           f"- Your answer will be parsed as JSON, so make sure it's valid JSON. Limit your response to ONLY the JSON structure, with no additional comments or formatting (like ```json or ```)."
             }
         ]
     )
@@ -81,6 +81,7 @@ def save_menu_to_db(pdf_path, restaurant_id):
     menu_text = extract_text_from_pdf(pdf_path)
     menu = Menu(menu_text=menu_text)
     menu.save()
+    print("Menu created: ", menu.menu_text)
 
     # Step 2: Link the menu to the restaurant
     print("Linking menu to restaurant...")
@@ -100,14 +101,14 @@ def save_menu_to_db(pdf_path, restaurant_id):
             print("Extracting fields...")
             # Extract fields
             food_name = item['Food']
-            price = item['Price']
+            price = item.get('Price', 0.0)  # Use a default value if price is None
             dish_type_name = item['Dish_Type']
             allergens = item.get('Allergens', [])
             ingredients = item.get('Ingredients', [])
 
             print("Handling empty price...")
-            # Handle empty price
-            if price == '':
+            # Handle empty or None price
+            if price is None or price == '':
                 price = 0.0  # Set a default value or handle as needed
             else:
                 price = float(price)  # Convert to float if not empty
