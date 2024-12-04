@@ -25,9 +25,158 @@ A menu relational database management system designed to enable users to upload 
 - **MenuScraper**: Root folder.
 - **Rest_api**: API folder.
 
-## Setup Instructions
 
-1. Navigate to the `database_project` folder.
+
+
+
+# Database
+
+## Database Schema
+
+![Database Schema](./database_schema.png)
+
+## Indexes
+
+Indexes are implemented to optimize database performance and reduce query latency, especially for frequently used API operations. Below is a detailed explanation of the indexes used in the system:
+
+### 1. **`idx_allergen_name`**
+- **Table**: `main_app_allergen`
+- **Purpose**: Enhances filtering operations in the `filter-foods/` endpoint by quickly locating allergens matching user-provided dietary restrictions.
+
+### 2. **`idx_fooditemallergen_food_id`** and **`idx_fooditemallergen_allergen_id`**
+- **Table**: `main_app_fooditemallergen`
+- **Purpose**: Improves performance for filtering and joining operations, particularly when retrieving restricted food items.
+
+### 3. **`idx_fooditem_food_id`**
+- **Table**: `main_app_fooditem`
+- **Purpose**: Optimizes the exclusion of restricted foods from the `FoodItem` table.
+
+### 4. **`idx_fooditemingredient_ingredient_id`**
+- **Table**: `main_app_fooditemingredient`
+- **Purpose**: Ensures efficient retrieval of ingredient details during prefetch operations.
+
+### 5. **`menu_version_id` and `restaurant_id`**
+- **Tables**: `main_app_menu` and `main_app_restaurant`
+- **Purpose**:
+  - **`menu_version_id`**: Improves the efficiency of endpoints like `get-menu-version/` by enabling quick access to menu version data.
+  - **`restaurant_id`**: Optimizes querying and joining operations for restaurant details.
+
+### Use Case Examples
+- **Filter Foods by Dietary Restrictions**:
+  - The `idx_allergen_name` index allows rapid filtering of allergens matching dietary restrictions.
+  - `idx_fooditemallergen_food_id` and `idx_fooditemallergen_allergen_id` streamline the retrieval of food items associated with specified allergens.
+
+- **Get Menu Versions**:
+  - The `menu_version_id` index enables faster querying of menu versions for a specific restaurant.
+  - `restaurant_id` supports efficient joining and filtering for restaurant details in complex queries.
+
+## Materialized Views
+
+Materialized views are used in the system to maintain aggregated data for efficient querying and provide up-to-date statistics for the end user.
+
+### **Summarized Average Prices View**
+- **Purpose**: Updates the minimum, maximum, and average prices of every restaurant every hour using the latest pricing data.
+- **Frequency**: Every 1 hour.
+- **Steps**:
+  1. Clears the existing data in the materialized view.
+  2. Recalculates and inserts the updated statistics.
+
+**SQL Implementation**:
+```sql
+DELIMITER //
+
+CREATE EVENT refresh_summarized_avg_prices
+ON SCHEDULE EVERY 1 HOUR
+DO
+BEGIN
+    TRUNCATE TABLE summarized_avg_prices;
+    INSERT INTO summarized_avg_prices
+    SELECT
+        r.id AS restaurant_id,
+        r.name AS restaurant_name,
+        AVG(f.food_price) AS avg_food_price,
+        MAX(f.food_price) AS max_food_price,
+        MIN(f.food_price) AS min_food_price
+    FROM
+        main_app_restaurant r
+    JOIN
+        main_app_restaurantmenu rm ON r.id = rm.restaurant_id_id
+    JOIN
+        main_app_menu m ON rm.menu_version_id_id = m.menu_version_id
+    JOIN
+        main_app_menufooditem mfi ON m.menu_version_id = mfi.menu_version_id_id
+    JOIN
+        main_app_fooditem f ON mfi.food_id_id = f.food_id
+    GROUP BY
+        r.id, r.name;
+END //
+
+DELIMITER ;
+```
+
+## Database Triggers
+
+Database triggers are used to automate actions in the database, ensuring consistency and efficient process logging for key operations.
+
+### **1. Trigger: After New Restaurant**
+- **Name**: `after_new_restaurant`
+- **Event**: Triggered after a new restaurant is added to the `main_app_restaurant` table.
+- **Purpose**: Automatically logs the addition of a new restaurant in the `main_app_processlog` table.
+
+**SQL Implementation**:
+```sql
+DELIMITER $$
+
+CREATE TRIGGER after_new_restaurant
+AFTER INSERT ON main_app_restaurant
+FOR EACH ROW
+BEGIN
+    INSERT INTO main_app_processlog (process_date, process_output, process_message, process_name)
+    VALUES (
+        NOW(),
+        'No Output',
+        CONCAT('New restaurant of ID ', NEW.id, ' has been uploaded.'),
+        'New Restaurant Upload'
+    );
+END $$
+
+DELIMITER ;
+````
+
+### **2. Trigger: After New Menu**
+- **Name**: `after_new_menu`
+- **Event**: Triggered after a new menu is added to the `main_app_menu` table.
+- **Purpose**: Automatically logs the addition of a new menu in the `main_app_processlog` table.
+
+**SQL Implementation**:
+```sql
+DELIMITER $$
+
+CREATE TRIGGER after_new_menu_version
+AFTER INSERT ON main_app_menu
+FOR EACH ROW
+BEGIN
+    INSERT INTO main_app_processlog (process_date, process_output, process_message, process_name)
+    SELECT
+        NOW(),
+        'No Output',
+        CONCAT('New menu version of ID ', NEW.menu_version_id, 
+               ' for restaurant of ID ', rm.restaurant_id_id, 
+               ' has been uploaded.'),
+        'New Menu Version Upload'
+    FROM main_app_restaurantmenu rm
+    WHERE rm.menu_version_id_id = NEW.menu_version_id;
+END $$
+
+DELIMITER ;
+```
+
+
+
+
+# Setup Instructions
+
+1. Navigate to your project folder.
 2. Run the following command:
 
    ```bash
