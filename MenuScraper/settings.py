@@ -123,11 +123,11 @@ REST_FRAMEWORK = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': "menu_scraper_db",
-        'HOST': "men-scraper-db.cxo6ooiwgf9x.us-east-1.rds.amazonaws.com",
-        'PORT': "3306",
-        'USER': "admin",
-        'PASSWORD': "Cristianoronaldo#7",
+        'NAME': os.getenv("DB_NAME"),
+        'HOST': os.getenv("DB_HOST"),
+        'PORT': os.getenv("DB_PORT"),
+        'USER': os.getenv("DB_USER"),
+        'PASSWORD': os.getenv("DB_PASSWORD"),
     }
 }
 
