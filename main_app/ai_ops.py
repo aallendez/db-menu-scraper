@@ -24,46 +24,9 @@ def format_menu_data(menu_text):
     
     
     print("Formatting menu data...")
-    # response = client.chat.completions.create(
-    #     model="gpt-3.5-turbo",
-    #     messages=[
-    #         {
-    #             "role": "system",
-    #             "content": """
-    #                     You are an assistant made to format menu text into structured data. You will be given a string of text that contains a restaurant menu.
-    #                     Your job is to format the text into a list of lists, where each inner list contains the fields of a menu item.
-    #             """
-    #         },
-    #         {
-    #             "role": "user",
-    #             "content":  f"""
-    #                             Format the following menu into structured data:\n\n{menu_text}.
-    #                             Return the response as a list of dicts, where each element is a dict of the fields of a menu item.
-    #                             1. Return the food name as the first element of the dict.
-    #                             2. Return the price as the second element of the dict.
-    #                             3. Return the dish type as the third element of the dict. Choose from: Appetizers, Mains, Desserts, Sides, Drinks
-    #                             4. Return the allergens as the fourth element of the dict, set them as a list of allergens. Choose from: Dairy, Gluten, Vegan, Vegetarian, Eggs, Shellfish, Tree Nuts, Peanuts, Fish, Soy
-    #                             5. Return the ingredients as the fifth element of the dict, set them as a list of ingredients.
-    #                             A a list in the full response would look like this: 
-    #                             [
-    #                                 {{
-    #                                     'Food': 'food name',
-    #                                     'Price': 'price'(only numbers),
-    #                                     'Dish_Type': 'dish type',
-    #                                     'Allergens': ['allergen1', 'allergen2', 'allergen3'],
-    #                                     'Ingredients': ['ingredient1', 'ingredient2', 'ingredient3']
-    #                                 }},
-    #                                 ...
-    #                             ]
-                                
-    #                         DO NOT MAKE THE RETURN WITH ```json. Just return the list of dicts and remember to add commas between the dicts. Just return it like in the example above. If a value is empty, set it to an empty string or "0" if it's a number.
-    #                         """
-    #         }
-    #     ]
-    # )
     
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=[
             {
                 "role": "system",
