@@ -1,5 +1,13 @@
 # Menu Relational Database Management System
 
+## Index
+
+- [Overview](#overview)
+- [Database](#database)
+- [Setup Instructions](#setup-instructions)
+- [API Documentation](#api-documentation)
+- [ETL Process](#etl-process)
+
 ## Overview
 
 A menu relational database management system designed to enable users to upload menus and perform queries, allowing text-based search results to be viewed. The system uses Django REST API and OpenAI's LLM to extract data from menu PDFs, which is then parsed into JSON format. This JSON data is subsequently processed by Django's admin API and stored in a relational MySQL database structured in third normal form, using main and transitive tables. The database is hosted on an AWS server located in Michigan, USA, as part of a one-year free trial.
@@ -39,23 +47,23 @@ A menu relational database management system designed to enable users to upload 
 
 Indexes are implemented to optimize database performance and reduce query latency, especially for frequently used API operations. Below is a detailed explanation of the indexes used in the system:
 
-### 1. **`idx_allergen_name`**
+1. **`idx_allergen_name`**
 - **Table**: `main_app_allergen`
 - **Purpose**: Enhances filtering operations in the `filter-foods/` endpoint by quickly locating allergens matching user-provided dietary restrictions.
 
-### 2. **`idx_fooditemallergen_food_id`** and **`idx_fooditemallergen_allergen_id`**
+2. **`idx_fooditemallergen_food_id`** and **`idx_fooditemallergen_allergen_id`**
 - **Table**: `main_app_fooditemallergen`
 - **Purpose**: Improves performance for filtering and joining operations, particularly when retrieving restricted food items.
 
-### 3. **`idx_fooditem_food_id`**
+3. **`idx_fooditem_food_id`**
 - **Table**: `main_app_fooditem`
 - **Purpose**: Optimizes the exclusion of restricted foods from the `FoodItem` table.
 
-### 4. **`idx_fooditemingredient_ingredient_id`**
+4. **`idx_fooditemingredient_ingredient_id`**
 - **Table**: `main_app_fooditemingredient`
 - **Purpose**: Ensures efficient retrieval of ingredient details during prefetch operations.
 
-### 5. **`menu_version_id` and `restaurant_id`**
+5. **`menu_version_id` and `restaurant_id`**
 - **Tables**: `main_app_menu` and `main_app_restaurant`
 - **Purpose**:
   - **`menu_version_id`**: Improves the efficiency of endpoints like `get-menu-version/` by enabling quick access to menu version data.
@@ -185,7 +193,7 @@ DELIMITER ;
 
 3. Test the API endpoints
 
-## API Documentation
+# API Documentation
 
 There are two ways to interact with the API:
 
@@ -348,3 +356,58 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
             "min_food_price": "4.95"
         }
         ````
+
+
+## ETL Process
+
+The system includes a robust ETL (Extract, Transform, Load) pipeline to process menu data efficiently from PDF files and store it in a relational database.
+
+### Steps in the ETL Process
+
+1. **Extract**  
+   - The `extract_text_from_pdf` function uses the `pdfplumber` library to extract raw text from a given PDF file.
+   - **Output**: A plain text string containing all the text from the PDF.
+
+2. **Transform**  
+   - The `format_menu_data` function uses OpenAI's GPT-4 model to process and structure the raw text into a Python dictionary.  
+   - **Fields Included**:
+     - Food Name
+     - Price
+     - Dish Type (inferred and categorized by GPT-4)
+     - Ingredients (inferred by GPT-4)
+     - Allergens (categorized by GPT-4 based on predefined categories)
+   - **Output**: A clean, structured Python dictionary ready for storage.
+
+3. **Load**  
+   - The `save_menu_to_db` function integrates the extracted and transformed data, automating the process of inserting it into the database.
+   - **Process**:
+     - Uses `extract_text_from_pdf` to retrieve text content.
+     - Passes the text through `format_menu_data` to format it.
+     - Stores the resulting structured data in the database using Django's ORM.
+
+### ETL Functions
+
+#### 1. `extract_text_from_pdf`
+- **Purpose**: Extracts raw text from PDF files.
+- **Input**: PDF file.
+- **Output**: Plain text string.
+
+#### 2. `format_menu_data`
+- **Purpose**: Converts extracted text into structured data.
+- **Input**: Extracted plain text.
+- **Output**: Python dictionary with fields:
+  - `Food Name`
+  - `Price`
+  - `Dish Type`
+  - `Ingredients`
+  - `Allergens`
+
+#### 3. `save_menu_to_db`
+- **Purpose**: Automates the full pipeline of extracting text, structuring data, and saving it to the database.
+- **Input**: PDF file.
+- **Output**: Data stored in the relevant database tables.
+
+### Benefits of the ETL Process
+- **Automation**: Fully automates the pipeline from data extraction to database insertion.
+- **Consistency**: Ensures that all data is structured and stored in a uniform format.
+- **Efficiency**: Reduces manual intervention and speeds up processing times.
