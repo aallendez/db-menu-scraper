@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import MenuUploadView, GetAllRestaurants, CreateRestaurant, HandleUserQuery, GetAllMenuVersionsFromRestaurant, GetMenuVersion, FilterFoodsByDietaryRestrictions
+from .views import MenuUploadView, GetAllRestaurants, CreateRestaurant, HandleUserQuery, GetAllMenuVersionsFromRestaurant, GetMenuVersion, FilterFoodsByDietaryRestrictions, GetSummarizedAvgPrices
 
 urlpatterns = [
     path('upload-menu/', MenuUploadView.as_view(), name='menu-upload'),
@@ -9,4 +9,5 @@ urlpatterns = [
     path('get-menus-restaurant/', GetAllMenuVersionsFromRestaurant.as_view(), name='get-menus-restaurant'),
     path('get-menu-version/', GetMenuVersion.as_view(), name='get-menu-version'),
     path('filter-foods/', FilterFoodsByDietaryRestrictions.as_view(), name='filter-foods'),
+    path('get-summarized-avg-prices/', GetSummarizedAvgPrices.as_view(), name='get-summarized-avg-prices'),
 ]

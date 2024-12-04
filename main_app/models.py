@@ -2,6 +2,19 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.core.validators import URLValidator
 
+
+class SummarizedAvgPrices(models.Model):
+    restaurant_id = models.IntegerField(primary_key=True)
+    restaurant_name = models.CharField(max_length=255)
+    avg_food_price = models.DecimalField(max_digits=12, decimal_places=4)
+    max_food_price = models.DecimalField(max_digits=10, decimal_places=2)
+    min_food_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        managed = False 
+        db_table = "summarized_avg_prices"  
+
+
 class ProcessLog(models.Model):
     process_log_id = models.AutoField(primary_key=True)
     process_date = models.DateTimeField(auto_now_add=True)

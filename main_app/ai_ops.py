@@ -65,7 +65,7 @@ def format_menu_data(menu_text):
         structured_data = json.loads(content)
         
         if not isinstance(structured_data, list):
-            raise ValueError("AI response is not a list of dictionaries.")
+            raise ValueError("AI response is not a list of dictionaries. AI gave a wrong format.")
         return structured_data
     except (json.JSONDecodeError, KeyError, ValueError) as e:
         raise ValueError(f"Failed to parse AI response: {str(e)}")

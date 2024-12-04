@@ -1,8 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Restaurant, Menu, FoodItem, RestaurantCuisine, Cuisine, RestaurantMenu, ProcessLog, FoodItemAllergen
-from .serializers import RestaurantSerializer, MenuSerializer, FoodItemSerializer
+from .models import Restaurant, Menu, FoodItem, RestaurantCuisine, Cuisine, RestaurantMenu, ProcessLog, FoodItemAllergen, SummarizedAvgPrices
+from .serializers import RestaurantSerializer, MenuSerializer, FoodItemSerializer, SummarizedAvgPricesSerializer
 from .ai_ops import format_menu_data, filter_query, extract_text_from_pdf, save_menu_to_db
 from rest_framework.permissions import AllowAny
 import datetime
@@ -255,6 +255,41 @@ class FilterFoodsByDietaryRestrictions(APIView):
                 process_name="filter_foods_by_dietary_restrictions",
                 process_date=datetime.datetime.now(),
                 process_message=f"Error filtering foods by dietary restrictions: {str(e)}",
+                process_output=str(e)
+            )
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+# Access to materialized view
+class GetSummarizedAvgPrices(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        try:
+            restaurant_id = request.data.get('restaurant_id')
+            if not restaurant_id:
+                raise ValueError("Restaurant ID must be provided")
+            
+            summarized_data = SummarizedAvgPrices.objects.get(restaurant_id=restaurant_id)
+            serializer = SummarizedAvgPricesSerializer(summarized_data)
+            
+            ProcessLog.objects.create(
+                process_name="get_summarized_avg_prices",
+                process_date=datetime.datetime.now(),
+                process_message=f"Successfully retrieved price summary for restaurant ID {restaurant_id}",
+                process_output=serializer.data
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        except SummarizedAvgPrices.DoesNotExist:
+            return Response(
+                {"error": f"No data found for restaurant ID {restaurant_id}"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            ProcessLog.objects.create(
+                process_name="get_summarized_avg_prices",
+                process_date=datetime.datetime.now(),
+                process_message=f"Error retrieving price summary: {str(e)}",
                 process_output=str(e)
             )
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
