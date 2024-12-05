@@ -460,3 +460,16 @@ The system includes a robust ETL (Extract, Transform, Load) pipeline to process 
 - **Efficiency**: Reduces manual intervention and speeds up processing times.
 
 
+# Conclusion
+
+## Challenges 
+1. AI Prompt Engineering: creating effective prompts for the AI model to accurately process and interpret menus as they can be very diverse.
+2. Materialized Views Implementation: instead of the built-in functionality of materialized views we manually managed a new table to store the aggregated data
+truncating the information in the table and recalculating the key statistics every one hour.
+
+## Future Improvements
+1. Enhanced AI for Processing: improving accuracy in parsing complete menus and categorizing items effectively.
+2. Input Validation and Rejection of Invalid Input: 
+- Validation mechanisms to detect and handle non-PDF files
+- Use OpenAI LLM to infer whether the document contains relevant menu-related information such as food items and prices to reject invalid inputs (non-menu PDFs).
+
