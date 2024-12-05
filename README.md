@@ -1,6 +1,7 @@
 # Menu Relational Database Management System
 
 If you want to see the project with frontend, clone the repo below and follow the instructions in the frontend README.md file.
+Important: use ```npm run dev```to use developer mode since localhost:5173 is the origin accepted by CORS.
 The repo -> https://github.com/aallendez/good-stuff-frontend
 
 
