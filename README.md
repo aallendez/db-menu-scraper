@@ -12,6 +12,7 @@ The repo -> https://github.com/aallendez/good-stuff-frontend
 - [Setup Instructions](#setup-instructions)
 - [API Documentation](#api-documentation)
 - [ETL Process](#etl-process)
+- [Conclusion](#conclusion)
 
 ## Overview
 
