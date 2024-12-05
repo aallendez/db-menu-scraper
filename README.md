@@ -333,7 +333,7 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
                             ]
                         }, ...
                     ]
-                },  ... other restaurants
+                },  ...
             ]
         }
         ````

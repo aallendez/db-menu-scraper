@@ -26,7 +26,7 @@ def format_menu_data(menu_text):
     print("Formatting menu data...")
     
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4-0613",
         messages=[
             {
                 "role": "system",
