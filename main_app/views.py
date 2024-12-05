@@ -3,11 +3,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Restaurant, Menu, FoodItem, RestaurantCuisine, Cuisine, RestaurantMenu, ProcessLog, FoodItemAllergen, SummarizedAvgPrices
 from .serializers import RestaurantSerializer, MenuSerializer, FoodItemSerializer, SummarizedAvgPricesSerializer
-from .ai_ops import format_menu_data, filter_query, extract_text_from_pdf, save_menu_to_db
+from .ai_ops import format_menu_data, process_restriction_query, extract_text_from_pdf, save_menu_to_db
 from rest_framework.permissions import AllowAny
 import datetime
 
 # Upload Menu
+# Not inserting success process logs here because they will be automated by the database trigger
 class MenuUploadView(APIView):
     permission_classes = [AllowAny]
     
@@ -21,12 +22,6 @@ class MenuUploadView(APIView):
         try:
             menu = save_menu_to_db(file, restaurant_id)
             
-            ProcessLog.objects.create(
-                process_name="format_and_save_menu_data",
-                process_date=datetime.datetime.now(),
-                process_message=f"Menu data correctly processed by AI and saved to DB for restaurant of ID {restaurant_id}",
-                process_output=menu.menu_version_id
-            )
             return Response({"menu_id": menu.menu_version_id}, status=status.HTTP_201_CREATED)
         except Exception as e:
             ProcessLog.objects.create(
@@ -38,6 +33,7 @@ class MenuUploadView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 # Get all restaurants
+# Not inserting process logs here because they will be automated by the database trigger
 class GetAllRestaurants(APIView):
     def get_queryset(self):
         return Restaurant.objects.all()
@@ -47,12 +43,6 @@ class GetAllRestaurants(APIView):
             restaurants = self.get_queryset()
             serializer = RestaurantSerializer(restaurants, many=True)
             
-            ProcessLog.objects.create(
-                process_name="get_all_restaurants",
-                process_date=datetime.datetime.now(),
-                process_message="All restaurants correctly retrieved from DB",
-                process_output=serializer.data
-            )
             return Response({"restaurants": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
             ProcessLog.objects.create(
@@ -179,11 +169,72 @@ class HandleUserQuery(APIView):
     
     def post(self, request):
         try:
-            query = request.data.get('query')
-            #results = filter_query(query)
+            # Get the allergen restrictions from the request data
+            restrictions = request.data.get('query')
             
-            return Response({"results": query}, status=status.HTTP_200_OK)
+            restrictions = process_restriction_query(restrictions)
+            
+            if not restrictions:
+                raise ValueError("Allergen restrictions must be provided.")
+            
+            # Query to find all food items that DO contain any of the given allergens
+            restricted_food_ids = FoodItemAllergen.objects.filter(
+                allergen_id__allergen_name__in=restrictions
+            ).values_list('food_id__food_id', flat=True)  # Use the correct foreign key lookup
+            
+            # Get all food items not in the restricted_food_ids
+            food_items = FoodItem.objects.exclude(food_id__in=restricted_food_ids).prefetch_related(
+                'fooditemingredient_set__ingredient_id',  # Prefetch ingredients
+                'menufooditem_set__menu_version_id__restaurantmenu_set__restaurant_id'  # Prefetch restaurant info
+            )
+            
+            # Restructure results to group by restaurant
+            restaurant_foods = {}
+            
+            for food in food_items:
+                food_data = {
+                    "food_name": food.food_name,
+                    "food_description": food.food_description,
+                    "food_price": food.food_price,
+                    "ingredients": [
+                        ingredient.ingredient_id.ingredient_name
+                        for ingredient in food.fooditemingredient_set.all()
+                    ]
+                }
+                
+                # Group by restaurant
+                for menu in food.menufooditem_set.all():
+                    for restaurant in menu.menu_version_id.restaurantmenu_set.all():
+                        restaurant_key = restaurant.restaurant_id.name
+                        if restaurant_key not in restaurant_foods:
+                            restaurant_foods[restaurant_key] = {
+                                "name": restaurant.restaurant_id.name,
+                                "location": restaurant.restaurant_id.location,
+                                "url": restaurant.restaurant_id.url,
+                                "foods": []
+                            }
+                        restaurant_foods[restaurant_key]["foods"].append(food_data)
+            
+            results = list(restaurant_foods.values())
+            
+            # Log the process
+            ProcessLog.objects.create(
+                process_name="filter_foods_by_dietary_restrictions",
+                process_date=datetime.datetime.now(),
+                process_message=f"Foods successfully filtered by dietary restrictions: {restrictions}",
+                process_output=str(results)
+            )
+            
+            return Response({"results": results}, status=status.HTTP_200_OK)
+        
         except Exception as e:
+            # Log the error
+            ProcessLog.objects.create(
+                process_name="filter_foods_by_dietary_restrictions",
+                process_date=datetime.datetime.now(),
+                process_message=f"Error filtering foods by dietary restrictions: {str(e)}",
+                process_output=str(e)
+            )
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 # Filter foods by dietary restrictions

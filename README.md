@@ -43,6 +43,8 @@ A menu relational database management system designed to enable users to upload 
 
 ![Database Schema](./database_schema.png)
 
+The database has been designed to be in third normal form, with main and transitive tables to avoid redundancy and ensure data integrity.  
+
 ## Indexes
 
 Indexes are implemented to optimize database performance and reduce query latency, especially for frequently used API operations. Below is a detailed explanation of the indexes used in the system:
@@ -203,7 +205,7 @@ There are two ways to interact with the API:
 Below, you can find the API endpoints, their descriptions, and the expected input and output for each endpoint.
 
 1. **Upload Menu**
-    - **Endpoint**: `/upload_menu/`
+    - **Endpoint**: `/api/upload-menu/`
     - **Description**: Handles uploading of menus from restaurants.
     - **Method**: POST
     - **Input**: PDF file as well as restaurant ID.
@@ -216,7 +218,7 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
     - **Output**: Menu version ID.
 
 2. **Get all restaurants**
-    - **Endpoint**: `/get_all_restaurants/`
+    - **Endpoint**: `/api/get_all_restaurants/`
     - **Description**: Retrieves all restaurants from the database.
     - **Method**: GET
     - **Input**: None
@@ -235,7 +237,7 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
         ```
 
 3. **Create restaurant**
-    - **Endpoint**: `/create_restaurant/`
+    - **Endpoint**: `/api/create_restaurant/`
     - **Description**: Creates a new restaurant.
     - **Method**: POST
     - **Input**: 
@@ -251,7 +253,7 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
     - **Output**: Created restaurant message along with restaurant ID.
 
 4. **Get all menu versions from restaurant**
-    - **Endpoint**: `/get-menus-restaurant/`
+    - **Endpoint**: `/api/get-menus-restaurant/`
     - **Description**: Retrieves all menu versions from a restaurant.
     - **Method**: GET
     - **Input**: 
@@ -273,7 +275,7 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
         ````
 
 5. **Get menu version**
-    - **Endpoint**: `/get-menu-version/`
+    - **Endpoint**: `/api/get-menu-version/`
     - **Description**: Retrieves a specific menu version from a restaurant.
     - **Method**: POST
     - **Input**: 
@@ -302,7 +304,7 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
         ````
 
 6. **Filter foods by dietary restrictions**
-    - **Endpoint**: `/filter-foods/`
+    - **Endpoint**: `/api/filter-foods/`
     - **Description**: Filters foods by dietary restrictions.
     - **Method**: POST
     - **Input**: 
@@ -337,7 +339,7 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
         ```
 
 7. **Get summarized avg prices**
-    - **Endpoint**: `/get-summarized-avg-prices/`
+    - **Endpoint**: `/api/get-summarized-avg-prices/`
     - **Description**: Gets summarized report of the prices of the menu items in the restaurant (including avg, min and max price). This is a materialized view that is updated every 1 hour with the latest menu versions.
     - **Method**: POST
     - **Input**: 

@@ -153,35 +153,71 @@ def save_menu_to_db(pdf_path, restaurant_id):
 
 
 
-# AI Query Processing
-
-def filter_query(query):
-    # Mock filter logic
-    
-    # Get ai educated guess 
-    suggested_query = ai_suggested_query(query)
-    
-    
-    
-    
-    ...
-    
-def ai_suggested_query(query):
-    # Get ai educated guess 
-    response = client.chat.completions.create(  
-        model="gpt-3.5-turbo",
-        messages=[
-            {
-                "role": "system",
-                "content": "You are an expert in restaurant menus and customer queries. Your task is to suggest a more specific query based on a general query."
-            },
-            {
-                "role": "user",
-                "content": f"Suggest a more specific query based on the following general query: {query}"
-            }
-        ]
-    )
-    # Parse the response
-    output = json.loads(response.choices[0].message.content)
-    return output
-    
+# Process restriction query
+def process_restriction_query(query):
+    """Process the query and extract allergen restrictions."""
+    try:
+        print("Query: ", query)
+        
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {
+                    "role": "system",
+                    "content": """You are an expert in restaurant menus and customer queries. You will be given a query and you will need to determine the allergens that are mentioned in the query. Then you must return them as a list of allergens.
+                                Allergens must be strictly chosen from the following list: Dairy, Gluten, Vegan, Vegetarian, Eggs, Shellfish, Tree Nuts, Peanuts, Fish, Soy.
+                                If no allergens are mentioned, return an empty list.
+                                This is an example of a query: "I'm allergic to dairy, gluten and peanuts. What can I eat?"
+                                The output should be: ["Dairy", "Gluten", "Peanuts"]
+                                """
+                },
+                {
+                    "role": "user",
+                    "content": f"Process the following query: {query}"
+                }
+            ]
+        )
+        
+        # Parse the response
+        try:    
+            print("AI response: ", response.choices[0].message.content)
+            print("Parsing AI response as JSON...")
+            output = json.loads(response.choices[0].message.content)
+            return output
+        except json.JSONDecodeError:
+            # Fallback: If AI response isn't valid JSON, try to extract allergens manually
+            content = response.choices[0].message.content
+            # Remove any brackets and quotes, split by commas
+            allergens = [a.strip(' "[]\'') for a in content.split(',')]
+            # Filter out empty strings and validate allergens
+            valid_allergens = ["Dairy", "Gluten", "Vegan", "Vegetarian", "Eggs", 
+                             "Shellfish", "Tree Nuts", "Peanuts", "Fish", "Soy"]
+            return [a for a in allergens if a in valid_allergens]
+            
+    except Exception as e:
+        print(f"Error in process_restriction_query: {str(e)}")
+        # Fallback: Basic text analysis if API fails
+        query = query.lower()
+        restrictions = []
+        allergen_keywords = {
+            "dairy": "Dairy",
+            "milk": "Dairy",
+            "cheese": "Dairy",
+            "gluten": "Gluten",
+            "wheat": "Gluten",
+            "vegan": "Vegan",
+            "vegetarian": "Vegetarian",
+            "egg": "Eggs",
+            "shellfish": "Shellfish",
+            "nuts": "Tree Nuts",
+            "tree nuts": "Tree Nuts",
+            "peanut": "Peanuts",
+            "fish": "Fish",
+            "soy": "Soy"
+        }
+        
+        for keyword, allergen in allergen_keywords.items():
+            if keyword in query:
+                restrictions.append(allergen)
+                
+        return list(set(restrictions))  # Remove duplicates
