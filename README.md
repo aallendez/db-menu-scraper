@@ -444,6 +444,11 @@ The system includes a robust ETL (Extract, Transform, Load) pipeline to process 
 - **Input**: PDF file.
 - **Output**: Data stored in the relevant database tables.
 
+#### 4. `process_restriction_query`
+- **Purpose**: Allows the user to filter and search the database using plain text where they specify their dietary restrictions.
+- **Input**: message: String.
+- **Output**: An array containing the allergens to look out for.
+
 ### Benefits of the ETL Process
 - **Automation**: Fully automates the pipeline from data extraction to database insertion.
 - **Consistency**: Ensures that all data is structured and stored in a uniform format.
