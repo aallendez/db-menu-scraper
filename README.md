@@ -1,5 +1,9 @@
 # Menu Relational Database Management System
 
+If you want to see the project with frontend, clone the repo below and follow the instructions in the frontend README.md file.
+The repo -> https://github.com/aallendez/good-stuff-frontend
+
+
 ## Index
 
 - [Overview](#overview)
