@@ -303,6 +303,41 @@ Below, you can find the API endpoints, their descriptions, and the expected inpu
         }
         ````
 
+6. **Handle user query for allergens**
+    - **Endpoint**: `/api/q/`
+    - **Description**: Handles user queries for allergens and returns all foods in the db that do not contain any of the allergens mentioned in the query, grouped by restaurant.
+    - **Method**: POST
+    - **Input**: 
+        ```
+        {
+            "query": "I'm allergic to dairy, gluten and peanuts. What can I eat?"
+        }
+        ```
+    - **Output**: 
+        ````
+        {
+            "results": [
+                {
+                    "name": "London Stakehouse",
+                    "location": "Ciudad Deportiva Real Madrid",
+                    "url": "https://stakehouse.com",
+                    "foods": [
+                        {
+                            "food_name": "Passion Jazz Dry Italian SW3",
+                            "food_description": "",
+                            "food_price": 0.0,
+                            "ingredients": [
+                                "vodka",
+                                "passion fruit",
+                                "apple Campari", ... other ingredients
+                            ]
+                        }, ...
+                    ]
+                },  ... other restaurants
+            ]
+        }
+        ````
+
 6. **Filter foods by dietary restrictions**
     - **Endpoint**: `/api/filter-foods/`
     - **Description**: Filters foods by dietary restrictions.
